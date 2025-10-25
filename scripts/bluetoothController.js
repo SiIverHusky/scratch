@@ -14,6 +14,12 @@ class BluetoothController {
         this.initializationRetries = 0;
         this.maxInitializationRetries = 10;
         
+        // Load device configuration
+        this.config = window.BluetoothDeviceConfig;
+        if (!this.config) {
+            console.error('❌ BluetoothDeviceConfig not loaded! Make sure bluetoothDeviceConfig.js is included before bluetoothController.js');
+        }
+        
         this.init();
     }
 
@@ -151,7 +157,8 @@ class BluetoothController {
                 lastConnectionTime: this.lastConnectionTime,
                 tools: this.availableTools,
                 deviceName: this.device ? this.device.name : null,
-                deviceId: this.device ? this.device.id : null
+                deviceId: this.device ? this.device.id : null,
+                deviceType: this.getDeviceType()
             };
             
             localStorage.setItem('bluetoothSession', JSON.stringify(this.sessionData));
@@ -159,6 +166,17 @@ class BluetoothController {
         } catch (error) {
             this.log(`❌ Failed to save session data: ${error.message}`, 'error');
         }
+    }
+
+    getDeviceType() {
+        if (!this.device || !this.device.name) return 'unknown';
+        
+        if (this.config) {
+            return this.config.getDeviceType(this.device.name);
+        }
+        
+        // Fallback logic if config not available
+        return 'unknown';
     }
 
     clearSessionData() {
@@ -229,55 +247,70 @@ class BluetoothController {
                 const devices = await navigator.bluetooth.getDevices();
                 
                 for (const device of devices) {
-                    if (device.name === 'Santa-Bot') {
-                        this.log('📱 Found previously paired Santa-Bot, attempting silent reconnection...', 'info');
-                        this.device = device;
+                    // Check if this device is one of our supported devices
+                    if (this.config && this.config.isSupported(device.name)) {
+                        this.log(`📱 Found previously paired ${device.name}, attempting silent reconnection...`, 'info');
                         
-                        // Try to reconnect using the existing device
-                        const server = await device.gatt.connect();
-                        const service = await server.getPrimaryService('0d9be2a0-4757-43d9-83df-704ae274b8df');
-                        this.characteristic = await service.getCharacteristic('8116d8c0-d45d-4fdf-998e-33ab8c471d59');
-                        
-                        // Set up listeners
-                        this.characteristic.addEventListener('characteristicvaluechanged', (event) => {
-                            this.handleNotification(event);
-                        });
-                        
-                        device.addEventListener('gattserverdisconnected', () => {
-                            this.log('📡 Device disconnected unexpectedly', 'warning');
-                            this.handleUnexpectedDisconnect();
-                        });
-                        
-                        await this.characteristic.startNotifications();
-                        
-                        this.isConnected = true;
-                        this.lastConnectionTime = Date.now();
-                        this.updateButtonState();
-                        this.updateStatus('connected');
-                        this.saveSessionData();
-                        
-                        // Update execution UI to enable run button
-                        this.updateExecutionUI();
-                        
-                        this.log('✅ Silent reconnection successful!', 'success');
-                        
-                        if (window.toast) {
-                            window.toast.success('Auto-reconnected to Santa-Bot!');
+                        try {
+                            this.device = device;
+                            
+                            // Set up disconnect listener early
+                            this.device.addEventListener('gattserverdisconnected', () => {
+                                this.log('🔌 Device disconnected unexpectedly', 'warning');
+                                this.handleUnexpectedDisconnect();
+                            });
+                            
+                            this.log(`📡 Connecting to ${device.name} GATT server...`, 'info');
+                            const server = await device.gatt.connect();
+                            
+                            this.log('🔍 Getting Robot Control service...', 'info');
+                            const service = await server.getPrimaryService(this.config.serviceUUID);
+                            
+                            this.log('🔍 Getting Command & Response characteristic...', 'info');
+                            this.characteristic = await service.getCharacteristic(this.config.characteristicUUID);
+                            
+                            // Set up notification listener
+                            this.characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                                this.handleNotification(event);
+                            });
+                            
+                            await this.characteristic.startNotifications();
+                            this.log('� Started listening for notifications', 'info');
+                            
+                            this.isConnected = true;
+                            this.isConnecting = false;
+                            this.lastConnectionTime = Date.now();
+                            this.updateButtonState();
+                            this.updateStatus('connected');
+                            this.log(`✅ Silently reconnected to ${device.name}!`, 'success');
+                            
+                            // Update execution UI
+                            this.updateExecutionUI();
+                            
+                            // Save session data
+                            this.saveSessionData();
+                            
+                            // Load cached tools if available
+                            if (this.availableTools.length > 0) {
+                                this.loadToolsIntoDropdowns();
+                            }
+                            
+                            // Request fresh tools
+                            setTimeout(() => {
+                                this.requestTools();
+                            }, 1000);
+                            
+                            return true; // Success!
+                            
+                        } catch (reconnectError) {
+                            this.log(`❌ Silent reconnection to ${device.name} failed: ${reconnectError.message}`, 'error');
+                            this.device = null;
+                            this.characteristic = null;
+                            // Continue trying other devices
                         }
-                        
-                        // Load cached tools and request fresh ones
-                        if (this.availableTools.length > 0) {
-                            this.loadToolsIntoDropdowns();
-                        }
-                        
-                        setTimeout(() => {
-                            this.requestTools();
-                        }, 1000);
-                        
-                        return true; // Indicate successful silent reconnection
                     }
                 }
-                this.log('📱 No previously paired Santa-Bot found in getDevices', 'info');
+                this.log('📱 No previously paired supported devices found in getDevices', 'info');
             }
         } catch (error) {
             this.log(`🔍 getDevices API failed or not supported: ${error.message}`, 'info');
@@ -521,31 +554,36 @@ class BluetoothController {
             this.updateStatus('connecting');
             
             if (isAutoReconnect) {
-                this.log('🔄 Auto-reconnecting to Santa-Bot...', 'info');
+                this.log('🔄 Auto-reconnecting to device...', 'info');
             } else {
-                this.log('🔍 Requesting BLE device...', 'info');
+                this.log('🔍 Requesting Bluetooth device...', 'info');
             }
 
             // Show loading state on connect button
             const connectBtn = document.getElementById('btConnectBtn');
             if (connectBtn) {
-                connectBtn.classList.add('loading');
+                connectBtn.textContent = 'Connecting...';
             }
+
+            // Build filters from config
+            const filters = this.config ? 
+                this.config.getDeviceNames().map(name => ({ name })) :
+                [{ name: 'Santa-Bot' }]; // Fallback if config not loaded
 
             // Request device
             this.device = await navigator.bluetooth.requestDevice({
-                filters: [{ name: 'Santa-Bot' }],
-                optionalServices: ['0d9be2a0-4757-43d9-83df-704ae274b8df']
+                filters: filters,
+                optionalServices: [this.config ? this.config.serviceUUID : '0d9be2a0-4757-43d9-83df-704ae274b8df']
             });
 
-            this.log('📡 Connecting to GATT server...', 'info');
+            this.log(`📡 Connecting to ${this.device.name} GATT server...`, 'info');
             const server = await this.device.gatt.connect();
 
-            this.log('🔍 Getting Santa-Bot Robot Control service...', 'info');
-            const service = await server.getPrimaryService('0d9be2a0-4757-43d9-83df-704ae274b8df');
+            this.log('🔍 Getting Robot Control service...', 'info');
+            const service = await server.getPrimaryService(this.config ? this.config.serviceUUID : '0d9be2a0-4757-43d9-83df-704ae274b8df');
 
             this.log('🔍 Getting Command & Response characteristic...', 'info');
-            this.characteristic = await service.getCharacteristic('8116d8c0-d45d-4fdf-998e-33ab8c471d59');
+            this.characteristic = await service.getCharacteristic(this.config ? this.config.characteristicUUID : '8116d8c0-d45d-4fdf-998e-33ab8c471d59');
 
             // Set up notification listener
             this.characteristic.addEventListener('characteristicvaluechanged', (event) => {
@@ -554,7 +592,7 @@ class BluetoothController {
 
             // Set up disconnect listener
             this.device.addEventListener('gattserverdisconnected', () => {
-                this.log('📡 Device disconnected unexpectedly', 'warning');
+                this.log('� Device disconnected', 'warning');
                 this.handleUnexpectedDisconnect();
             });
 
@@ -566,7 +604,7 @@ class BluetoothController {
             this.lastConnectionTime = Date.now();
             this.updateButtonState();
             this.updateStatus('connected');
-            this.log('✅ Connected successfully to Santa-Bot!', 'success');
+            this.log(`✅ Connected successfully to ${this.device.name}!`, 'success');
 
             // Update execution UI to enable run button
             this.updateExecutionUI();
@@ -576,8 +614,7 @@ class BluetoothController {
 
             // Show success toast
             if (window.toast) {
-                const message = isAutoReconnect ? 'Auto-reconnected to Santa-Bot!' : 'Connected to Santa-Bot successfully!';
-                window.toast.success(message);
+                window.toast.success(`Connected to ${this.device.name}!`);
             }
 
             // If we have cached tools, load them immediately into dropdowns
@@ -598,14 +635,13 @@ class BluetoothController {
             this.log(`❌ Connection failed: ${error.message}`, 'error');
             
             if (window.toast) {
-                const message = isAutoReconnect ? 'Auto-reconnect failed' : 'Failed to connect to Santa-Bot';
-                window.toast.error(message);
+                window.toast.error(`Connection failed: ${error.message}`);
             }
         } finally {
             // Remove loading state from connect button
             const connectBtn = document.getElementById('btConnectBtn');
             if (connectBtn) {
-                connectBtn.classList.remove('loading');
+                connectBtn.textContent = 'Connect to Device';
             }
         }
     }
