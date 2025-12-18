@@ -131,6 +131,7 @@ javascriptGenerator.forBlock['send_cmd_dropdown'] = function(block, generator) {
     
     paramCode += paramEntries.join(', ') + '}';
     
+    // For non-interpreter execution, use cmd_dropdown directly
     const code = `cmd_dropdown("${toolName}", ${paramCode});\n`;
     return code;
 };
@@ -510,7 +511,8 @@ function generateInterpreterCode() {
     
     paramCode += paramEntries.join(', ') + '}';
     
-    const code = `cmd_dropdown("${toolName}", ${paramCode});\n`;
+    // Pass parameters as JSON string to executeSantaCommand so it can parse and detect Time parameter
+    const code = `executeSantaCommand("${toolName}", JSON.stringify(${paramCode}));\n`;
     return code;
   };
 
