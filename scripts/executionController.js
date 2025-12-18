@@ -7,6 +7,7 @@ let isExecuting = false;
 let executionMode = 'stopped'; // 'stopped', 'fullSpeed', 'blockByBlock', 'stepping'
 let stopBlockExecuted = false; // Flag to track if stop block was executed
 let executionTimeoutId = null; // Track the timeout ID for block-by-block execution
+let nextStepDelay = null; // One-time delay override for Time parameter (in ms)
 
 function highlightBlock(id) {
   if (window.workspace) {
@@ -164,7 +165,19 @@ function initializeInterpreter() {
         nativeParams = nativeParams && typeof nativeParams === 'object' ? nativeParams : {};
       }
 
-  console.log('Executing Santa command:', toolName, nativeParams);
+      console.log('Executing Santa command:', toolName, nativeParams);
+      
+      // Check for Time parameter (case-insensitive)
+      for (const key in nativeParams) {
+        if (key.toLowerCase() === 'time') {
+          const timeValue = Number(nativeParams[key]) || 0;
+          if (timeValue > 0) {
+            nextStepDelay = timeValue * 1000; // Convert seconds to milliseconds
+            console.log('⏱️ Time parameter detected:', timeValue, 'seconds (', nextStepDelay, 'ms)');
+          }
+          break;
+        }
+      }
       
       // Check if BLE is connected before sending command
       if (!window.bleManager || !window.bleManager.isConnected) {
@@ -175,7 +188,7 @@ function initializeInterpreter() {
       
       // Execute the command using v2 compatible function
       if (window.executeSantaCommand) {
-  window.executeSantaCommand(toolName, nativeParams).catch(error => {
+        window.executeSantaCommand(toolName, nativeParams).catch(error => {
           console.error('Error executing Santa command:', error);
           showToast('Error executing command: ' + error.message, { duration: 3000 });
         });
@@ -412,7 +425,17 @@ function runBlockByBlock(timeout = 10) {
       }
       
       // Get dynamic timeout based on operation type
-      const dynamicTimeout = getDynamicTimeout(currentInterpreter, timeout);
+      let dynamicTimeout = getDynamicTimeout(currentInterpreter, timeout);
+      
+      // Use nextStepDelay if set (for Time parameters), otherwise use dynamicTimeout
+      if (nextStepDelay !== null) {
+        console.log('⏱️ Using nextStepDelay:', nextStepDelay, 'ms (overriding default:', dynamicTimeout, 'ms)');
+        dynamicTimeout = nextStepDelay;
+        nextStepDelay = null; // Reset after use
+      } else {
+        console.log('⏱️ Using default timeout:', dynamicTimeout, 'ms');
+      }
+      
       executionTimeoutId = setTimeout(() => {
         // Double-check that execution is still running before continuing
         if (isExecuting && executionMode === 'blockByBlock') {
@@ -550,6 +573,7 @@ function stopExecution() {
   executionMode = 'stopped';
   currentInterpreter = null;
   stopBlockExecuted = false; // Reset flag
+  nextStepDelay = null; // Reset any pending Time delay
   
   // Clear any pending timeout to prevent restart
   if (executionTimeoutId) {
