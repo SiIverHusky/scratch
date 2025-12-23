@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MiniPupper Web Controller</title>
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/header.css">
+    <link rel="stylesheet" href="styles/joystick.css">
+    <link rel="stylesheet" href="styles/controls.css">
+    <link rel="stylesheet" href="styles/info.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1976d2">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐕 MiniPupper Controller</h1>
+            <div class="status disconnected" id="status">Disconnected</div>
+            <br>
+            <button class="connect-btn" id="connectBtn">Connect via Bluetooth</button>
+        </div>
+
+        <div class="controls" id="controls">
+            <div class="controls-inner">
+                <div class="joysticks">
+                    <div class="joystick-container">
+                        <div class="joystick-label">Left Stick (Movement)</div>
+                        <div class="joystick" id="leftJoystick">
+                            <div class="joystick-stick" id="leftStick"></div>
+                        </div>
+                    </div>
+                    <div class="info info-center">
+                        <div class="info-row">
+                            <span>Left:</span>
+                            <span id="infoLeft">X: 0.00, Y: 0.00</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Right:</span>
+                            <span id="infoRight">X: 0.00, Y: 0.00</span>
+                        </div>
+                        <div class="info-row">
+                            <span>D-Pad:</span>
+                            <span id="infoDpad">X: 0, Y: 0</span>
+                        </div>
+                    </div>
+                    <div class="joystick-container">
+                        <div class="joystick-label">Right Stick (Yaw/Pitch)</div>
+                        <div class="joystick" id="rightJoystick">
+                            <div class="joystick-stick" id="rightStick"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lower-controls">
+                    <div class="dpad-section">
+                        <div class="joystick-label">D-Pad (Height/Roll)</div>
+                        <div class="dpad">
+                            <div class="dpad-btn empty"></div>
+                            <div class="dpad-btn" data-dpad="up">▲</div>
+                            <div class="dpad-btn empty"></div>
+                            <div class="dpad-btn" data-dpad="left">◄</div>
+                            <div class="dpad-btn empty"></div>
+                            <div class="dpad-btn" data-dpad="right">►</div>
+                            <div class="dpad-btn empty"></div>
+                            <div class="dpad-btn" data-dpad="down">▼</div>
+                            <div class="dpad-btn empty"></div>
+                        </div>
+                    </div>
+
+                    <div class="buttons-section">
+                        <div class="joystick-label">Actions</div>
+                        <div class="buttons">
+                            <button class="button" id="btnDisconnect">Disconnect</button>
+                            <button class="button" id="btnR1">R1 (Trot)</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Future features to implement:
+                     - Hop (X button)
+                     - Dance (Circle button)
+                     - Shutdown (Triangle button)
+                -->
+
+                <div class="info info-bottom">
+                    <div class="info-row">
+                        <span>Left Stick:</span>
+                        <span id="infoLeftBottom">X: 0.00, Y: 0.00</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Right Stick:</span>
+                        <span id="infoRightBottom">X: 0.00, Y: 0.00</span>
+                    </div>
+                    <div class="info-row">
+                        <span>D-Pad:</span>
+                        <span id="infoDpadBottom">X: 0, Y: 0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/gamepadMapper.js"></script>
+    <script src="scripts/bluetoothService.js"></script>
+    <script src="scripts/uiController.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js').catch(function(err){
+                    console.warn('Service Worker registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

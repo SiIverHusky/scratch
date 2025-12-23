@@ -1,0 +1,73 @@
+/* Buttons and D-pad controls */
+
+.lower-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dpad-section,
+.buttons-section {
+    text-align: center;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.button {
+    padding: 15px;
+    font-size: 1em;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+    text-transform: uppercase;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.button:active {
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+
+.button.toggle-on {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(3, 60px);
+    gap: 5px;
+    margin: 20px auto;
+    width: fit-content;
+}
+
+.dpad-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.dpad-btn:active {
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+}
+
+.dpad-btn.empty {
+    visibility: hidden;
+}

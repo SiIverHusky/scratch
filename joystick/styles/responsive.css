@@ -1,0 +1,230 @@
+/* Responsive styles for different screen sizes */
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.2em;
+        margin-bottom: 5px;
+    }
+    
+    .status {
+        font-size: 0.8em;
+        padding: 4px 12px;
+    }
+    
+    .connect-btn {
+        padding: 8px 20px;
+        font-size: 0.9em;
+    }
+    
+    .controls {
+        padding: 10px;
+    }
+    
+    .controls-inner {
+        padding: 15px;
+    }
+    
+    .joysticks {
+        margin-bottom: 15px;
+        gap: 15px;
+    }
+    
+    .joystick {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .joystick-stick {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .joystick-label {
+        font-size: 0.8em;
+        margin-bottom: 5px;
+    }
+    
+    .lower-controls {
+        gap: 15px;
+    }
+    
+    .buttons {
+        gap: 10px;
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .button {
+        padding: 12px;
+        font-size: 0.85em;
+    }
+    
+    .dpad {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(3, 50px);
+        gap: 4px;
+        margin: 10px auto;
+    }
+    
+    .dpad-btn {
+        font-size: 1.2em;
+    }
+    
+    .info {
+        margin-top: 15px;
+        padding: 10px;
+        font-size: 0.8em;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+    .joystick {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .joystick-stick {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .dpad {
+        grid-template-columns: repeat(3, 45px);
+        grid-template-rows: repeat(3, 45px);
+    }
+}
+
+/* Landscape on mobile/tablet - PS4 controller layout */
+@media (orientation: landscape) and (max-width: 1024px) {
+    /* Compact header for landscape - visible when disconnected */
+    .header {
+        display: block;
+        padding: 5px 15px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Hide header when connected (controls.active exists) */
+    .container:has(.controls.active) .header {
+        display: none;
+    }
+    
+    .header h1 {
+        display: none;
+    }
+    
+    .header .status {
+        font-size: 0.75em;
+        padding: 3px 10px;
+        margin-top: 0;
+    }
+    
+    .header .connect-btn {
+        padding: 6px 15px;
+        font-size: 0.8em;
+        margin-top: 3px;
+    }
+    
+    .header br {
+        display: none;
+    }
+    
+    .controls {
+        padding: 5px;
+    }
+    
+    .controls-inner {
+        padding: 8px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    /* Joysticks row - sticks on outer edges like PS4 */
+    .joysticks {
+        margin-bottom: 5px;
+        gap: 10px;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+    
+    .joystick-container {
+        min-width: unset;
+        flex: 0 0 auto;
+    }
+    
+    .joystick {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .joystick-stick {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .joystick-label {
+        font-size: 0.7em;
+        margin-bottom: 3px;
+    }
+    
+    /* Show center info box between joysticks in landscape */
+    .info-center {
+        display: block;
+        font-size: 0.65em;
+        padding: 8px;
+    }
+    
+    .info-center .info-row {
+        margin: 2px 0;
+    }
+    
+    /* Hide bottom info box in landscape */
+    .info-bottom {
+        display: none;
+    }
+    
+    /* Lower controls - D-pad left, buttons right like PS4 */
+    .lower-controls {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 60px;
+        flex: 1;
+    }
+    
+    .dpad-section,
+    .buttons-section {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .dpad {
+        grid-template-columns: repeat(3, 36px);
+        grid-template-rows: repeat(3, 36px);
+        gap: 2px;
+        margin: 5px auto;
+    }
+    
+    .dpad-btn {
+        font-size: 0.9em;
+    }
+    
+    .buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 5px;
+    }
+    
+    .button {
+        padding: 10px 15px;
+        font-size: 0.7em;
+        min-width: 80px;
+    }
+}

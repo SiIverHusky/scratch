@@ -1,0 +1,31 @@
+/* Info display panel */
+
+.info {
+    color: white;
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    font-size: 0.9em;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+}
+
+/* Center info box (between joysticks) - hidden by default, shown in landscape */
+.info-center {
+    display: none;
+    margin: 0;
+    padding: 10px;
+    flex: 1;
+    max-width: 200px;
+    align-self: center;
+}
+
+/* Bottom info box - shown in portrait, hidden in landscape */
+.info-bottom {
+    display: block;
+}
