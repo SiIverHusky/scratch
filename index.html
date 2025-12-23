@@ -21,6 +21,9 @@
     <link rel="stylesheet" href="styles/bluetoothModal.css">
     <link rel="stylesheet" href="styles/variablesPane.css">
 
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1976d2">
+
     <!-- Prism.js Syntax Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
@@ -197,6 +200,15 @@
         });
         
         Prism.highlightAll();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js').catch(function(err){
+                    console.warn('Service Worker registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
