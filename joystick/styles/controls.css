@@ -2,13 +2,16 @@
 
 .lower-controls {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     gap: 20px;
 }
 
 .dpad-section,
-.buttons-section {
+.robots-section {
     text-align: center;
+    flex: 0 0 auto;
 }
 
 .buttons {
@@ -41,6 +44,68 @@
 .button.toggle-on {
     background-color: #4CAF50;
     border-color: #4CAF50;
+}
+
+.robots-section {
+    text-align: center;
+    margin-top: 0;
+}
+
+.diamond-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.diamond-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.diamond-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 30%;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.diamond-btn:active {
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+
+.diamond-btn.danger {
+    background-color: rgba(255, 87, 34, 0.4);
+    border-color: #ff5722;
+}
+
+.diamond-btn.danger:active {
+    background-color: rgba(255, 87, 34, 0.6);
+}
+
+.diamond-btn.action {
+    background-color: rgba(76, 175, 80, 0.4);
+    border-color: #4CAF50;
+}
+
+.diamond-btn.action:active {
+    background-color: rgba(76, 175, 80, 0.6);
 }
 
 .dpad {

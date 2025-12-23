@@ -12,8 +12,23 @@ class UIController {
     }
 
     init() {
-        // Connect button
+        // Header connect button - initial connection
         document.getElementById('connectBtn').addEventListener('click', () => this.handleConnect());
+
+        // Robot management buttons in controls area
+        document.getElementById('btnConnectNew').addEventListener('click', () => this.handleConnect());
+        document.getElementById('btnDisconnectOne').addEventListener('click', () => this.openManageModal());
+        document.getElementById('btnDisconnectAll').addEventListener('click', () => this.handleDisconnectAll());
+
+        // Modal controls
+        document.getElementById('modalClose').addEventListener('click', () => this.closeManageModal());
+
+        // Close modal on background click
+        document.getElementById('manageModal').addEventListener('click', (e) => {
+            if (e.target.id === 'manageModal') {
+                this.closeManageModal();
+            }
+        });
 
         // Initialize joysticks
         this.initJoystick('left', 
@@ -26,11 +41,13 @@ class UIController {
         );
 
         // Initialize buttons
-        this.initDisconnectButton();
         this.initButton('btnR1', 'R1');
 
         // Initialize D-pad
         this.initDpad();
+
+        // Listen for robot list changes
+        this.bluetoothService.onRobotsChange = () => this.updateRobotsList();
     }
 
     async handleConnect() {
@@ -38,28 +55,127 @@ class UIController {
             this.updateStatus('connecting', 'Connecting...');
             document.getElementById('connectBtn').disabled = true;
 
-            await this.bluetoothService.connect();
+            const robot = await this.bluetoothService.connect();
 
-            this.updateStatus('connected', 'Connected');
-            document.getElementById('controls').classList.add('active');
+            console.log('Robot connected:', robot.name);
 
-            // Start sending updates
-            this.bluetoothService.startUpdates(() => this.gamepadMapper.getState());
+            // Start sending updates if this is the first robot
+            if (this.bluetoothService.getConnectedCount() === 1) {
+                this.bluetoothService.startUpdates(() => this.gamepadMapper.getState());
+                document.getElementById('controls').classList.add('active');
+            }
 
-            // Set disconnect callback
-            this.bluetoothService.onDisconnect = () => this.handleDisconnect();
+            document.getElementById('connectBtn').disabled = false;
 
         } catch (error) {
-            this.updateStatus('disconnected', 'Connection failed');
             document.getElementById('connectBtn').disabled = false;
-            alert('Connection failed: ' + error.message);
+            this.updateRobotsList(); // Refresh status display
+            
+            // Only show alert if user didn't cancel
+            if (error.name !== 'NotFoundError') {
+                alert('Connection failed: ' + error.message);
+            }
         }
     }
 
-    handleDisconnect() {
-        this.updateStatus('disconnected', 'Disconnected');
-        document.getElementById('controls').classList.remove('active');
-        document.getElementById('connectBtn').disabled = false;
+    handleDisconnectAll() {
+        if (this.bluetoothService.getConnectedCount() > 0) {
+            this.bluetoothService.disconnectAll();
+        }
+    }
+
+    updateRobotsList() {
+        const robots = this.bluetoothService.getRobots();
+        const count = robots.length;
+        const robotsSection = document.getElementById('robotsSection');
+        const robotCount = document.getElementById('robotCount');
+
+        // Update status
+        if (count === 0) {
+            this.updateStatus('disconnected', 'Disconnected');
+            document.getElementById('controls').classList.remove('active');
+            robotsSection.style.display = 'none';
+        } else {
+            this.updateStatus('connected', `${count} robot${count > 1 ? 's' : ''} connected`);
+            robotsSection.style.display = 'block';
+            robotCount.textContent = count;
+        }
+
+        // Update modal list if open
+        this.updateModalList();
+    }
+
+    openManageModal() {
+        document.getElementById('manageModal').classList.add('show');
+        this.updateModalList();
+    }
+
+    closeManageModal() {
+        document.getElementById('manageModal').classList.remove('show');
+    }
+
+    updateModalList() {
+        const modalList = document.getElementById('modalRobotsList');
+        const robots = this.bluetoothService.getRobots();
+
+        if (robots.length === 0) {
+            modalList.innerHTML = `
+                <div class="modal-empty-state">
+                    <div class="empty-icon">🐕</div>
+                    <p>No robots connected</p>
+                </div>
+            `;
+            return;
+        }
+
+        modalList.innerHTML = '';
+        
+        robots.forEach(robot => {
+            const item = document.createElement('div');
+            item.className = 'modal-robot-item';
+            
+            const connectedTime = this.getTimeSince(robot.connectedAt);
+            
+            item.innerHTML = `
+                <div class="modal-robot-info">
+                    <div class="modal-robot-icon">🐕</div>
+                    <div class="modal-robot-details">
+                        <div class="modal-robot-name">${robot.name}</div>
+                        <div class="modal-robot-time">Connected ${connectedTime}</div>
+                    </div>
+                </div>
+                <button class="modal-robot-disconnect" data-robot-id="${robot.id}">
+                    Disconnect
+                </button>
+            `;
+
+            // Add disconnect handler
+            const disconnectBtn = item.querySelector('.modal-robot-disconnect');
+            disconnectBtn.addEventListener('click', () => {
+                this.bluetoothService.disconnect(robot.id);
+                // Close modal if no more robots
+                if (this.bluetoothService.getConnectedCount() <= 1) {
+                    this.closeManageModal();
+                }
+            });
+
+            modalList.appendChild(item);
+        });
+    }
+
+    getTimeSince(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        if (seconds < 60) return 'just now';
+        
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        
+        const days = Math.floor(hours / 24);
+        return `${days}d ago`;
     }
 
     updateStatus(status, text) {
@@ -99,14 +215,15 @@ class UIController {
             const normalizedX = x / maxRadius;
             const normalizedY = -y / maxRadius; // Invert Y for correct mechanical direction
 
+            const infoText = `X: ${normalizedX.toFixed(2)}, Y: ${normalizedY.toFixed(2)}`;
             if (side === 'left') {
                 this.gamepadMapper.setLeftStick(normalizedX, normalizedY);
-                document.getElementById('infoLeft').textContent = 
-                    `X: ${normalizedX.toFixed(2)}, Y: ${normalizedY.toFixed(2)}`;
+                document.getElementById('infoLeft').textContent = infoText;
+                document.getElementById('infoLeftBottom').textContent = infoText;
             } else {
                 this.gamepadMapper.setRightStick(normalizedX, normalizedY);
-                document.getElementById('infoRight').textContent = 
-                    `X: ${normalizedX.toFixed(2)}, Y: ${normalizedY.toFixed(2)}`;
+                document.getElementById('infoRight').textContent = infoText;
+                document.getElementById('infoRightBottom').textContent = infoText;
             }
         };
 
@@ -115,9 +232,11 @@ class UIController {
             if (side === 'left') {
                 this.gamepadMapper.resetLeftStick();
                 document.getElementById('infoLeft').textContent = 'X: 0.00, Y: 0.00';
+                document.getElementById('infoLeftBottom').textContent = 'X: 0.00, Y: 0.00';
             } else {
                 this.gamepadMapper.resetRightStick();
                 document.getElementById('infoRight').textContent = 'X: 0.00, Y: 0.00';
+                document.getElementById('infoRightBottom').textContent = 'X: 0.00, Y: 0.00';
             }
         };
 
@@ -157,13 +276,6 @@ class UIController {
                 isDragging = false;
                 resetStick();
             }
-        });
-    }
-
-    initDisconnectButton() {
-        const button = document.getElementById('btnDisconnect');
-        button.addEventListener('click', () => {
-            this.bluetoothService.disconnect();
         });
     }
 
@@ -251,8 +363,9 @@ class UIController {
 
     updateDpadInfo() {
         const state = this.gamepadMapper.getState();
-        document.getElementById('infoDpad').textContent = 
-            `X: ${state.dpadx}, Y: ${state.dpady}`;
+        const dpadText = `X: ${state.dpadx}, Y: ${state.dpady}`;
+        document.getElementById('infoDpad').textContent = dpadText;
+        document.getElementById('infoDpadBottom').textContent = dpadText;
     }
 }
 

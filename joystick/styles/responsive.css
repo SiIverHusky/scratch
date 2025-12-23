@@ -138,7 +138,8 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
+        overflow: hidden;
     }
     
     /* Joysticks row - sticks on outer edges like PS4 */
@@ -156,13 +157,13 @@
     }
     
     .joystick {
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
     }
     
     .joystick-stick {
-        width: 42px;
-        height: 42px;
+        width: 36px;
+        height: 36px;
     }
     
     .joystick-label {
@@ -191,12 +192,12 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        gap: 60px;
-        flex: 1;
+        gap: 40px;
+        flex: 0 0 auto;
     }
     
     .dpad-section,
-    .buttons-section {
+    .robots-section {
         flex: 0 0 auto;
         display: flex;
         flex-direction: column;
@@ -214,17 +215,65 @@
     .dpad-btn {
         font-size: 0.9em;
     }
-    
-    .buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+
+    /* Diamond buttons compact for landscape */
+    .robots-section {
+        margin-top: 0;
+    }
+
+    .robots-section .joystick-label {
+        font-size: 0.7em;
+        margin-bottom: 3px;
+    }
+
+    .diamond-buttons {
+        gap: 4px;
         margin-top: 5px;
     }
+
+    .diamond-row {
+        gap: 4px;
+    }
+
+    .diamond-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 0.65em;
+    }
+}
+
+/* Extra small landscape screens */
+@media (orientation: landscape) and (max-height: 400px) {
+    .joystick {
+        width: 80px;
+        height: 80px;
+    }
     
-    .button {
-        padding: 10px 15px;
-        font-size: 0.7em;
-        min-width: 80px;
+    .joystick-stick {
+        width: 30px;
+        height: 30px;
+    }
+
+    .joystick-label {
+        display: none;
+    }
+
+    .info-center {
+        display: none;
+    }
+
+    .dpad {
+        grid-template-columns: repeat(3, 32px);
+        grid-template-rows: repeat(3, 32px);
+    }
+
+    .diamond-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 0.6em;
+    }
+
+    .robots-section .joystick-label {
+        display: none;
     }
 }

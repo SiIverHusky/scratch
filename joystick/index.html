@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="styles/joystick.css">
     <link rel="stylesheet" href="styles/controls.css">
     <link rel="stylesheet" href="styles/info.css">
+    <link rel="stylesheet" href="styles/modal.css">
     <link rel="stylesheet" href="styles/responsive.css">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1976d2">
@@ -69,11 +70,19 @@
                         </div>
                     </div>
 
-                    <div class="buttons-section">
-                        <div class="joystick-label">Actions</div>
-                        <div class="buttons">
-                            <button class="button" id="btnDisconnect">Disconnect</button>
-                            <button class="button" id="btnR1">R1 (Trot)</button>
+                    <div class="robots-section" id="robotsSection" style="display: none;">
+                        <div class="joystick-label">Robots (<span id="robotCount">0</span>)</div>
+                        <div class="diamond-buttons">
+                            <div class="diamond-row">
+                                <button class="diamond-btn" id="btnConnectNew">+ Add</button>
+                            </div>
+                            <div class="diamond-row">
+                                <button class="diamond-btn" id="btnDisconnectOne">- One</button>
+                                <button class="diamond-btn danger" id="btnDisconnectAll">X All</button>
+                            </div>
+                            <div class="diamond-row">
+                                <button class="diamond-btn action" id="btnR1">Trot</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -98,6 +107,19 @@
                         <span id="infoDpadBottom">X: 0, Y: 0</span>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disconnect One Robot Modal -->
+    <div class="modal" id="manageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select Robot to Disconnect</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalRobotsList" class="modal-robots-list"></div>
             </div>
         </div>
     </div>

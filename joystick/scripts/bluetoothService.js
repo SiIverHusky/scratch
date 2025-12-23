@@ -6,26 +6,36 @@ const CHARACTERISTIC_UUID = '8116d8c0-d45d-4fdf-998e-33ab8c471d59';
 
 class BluetoothService {
     constructor() {
-        this.device = null;
-        this.characteristic = null;
-        this.isConnected = false;
+        this.robots = new Map(); // Map of robot ID -> robot object
         this.updateInterval = null;
-        this.onStatusChange = null;
-        this.onDisconnect = null;
+        this.onRobotsChange = null; // Callback when robots list changes
+        this.nextRobotId = 1;
+    }
+
+    get isConnected() {
+        return this.robots.size > 0;
+    }
+
+    getRobots() {
+        return Array.from(this.robots.values());
+    }
+
+    getConnectedCount() {
+        return this.robots.size;
     }
 
     async connect() {
         try {
             // Request Bluetooth device
-            this.device = await navigator.bluetooth.requestDevice({
+            const device = await navigator.bluetooth.requestDevice({
                 filters: [{ name: 'Minipupper-v2' }],
                 optionalServices: [SERVICE_UUID]
             });
 
-            console.log('Device selected:', this.device.name);
+            console.log('Device selected:', device.name);
 
             // Connect to GATT server
-            const server = await this.device.gatt.connect();
+            const server = await device.gatt.connect();
             console.log('Connected to GATT server');
 
             // Get service
@@ -33,53 +43,96 @@ class BluetoothService {
             console.log('Got service');
 
             // Get characteristic
-            this.characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+            const characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
             console.log('Got characteristic');
 
             // Start notifications
-            await this.characteristic.startNotifications();
-            this.characteristic.addEventListener('characteristicvaluechanged', (event) => {
+            await characteristic.startNotifications();
+            characteristic.addEventListener('characteristicvaluechanged', (event) => {
                 this.handleNotification(event.target.value);
             });
 
-            this.isConnected = true;
+            // Create robot object
+            const robotId = this.nextRobotId++;
+            const robot = {
+                id: robotId,
+                device: device,
+                characteristic: characteristic,
+                name: device.name || `Robot ${robotId}`,
+                connectedAt: new Date()
+            };
 
             // Handle disconnection
-            this.device.addEventListener('gattserverdisconnected', () => {
-                this.handleDisconnection();
+            device.addEventListener('gattserverdisconnected', () => {
+                this.handleDisconnection(robotId);
             });
 
-            return true;
+            // Add to robots map
+            this.robots.set(robotId, robot);
+
+            // Start updates if this is the first robot
+            if (this.robots.size === 1) {
+                this.startUpdates();
+            }
+
+            // Notify listeners
+            if (this.onRobotsChange) {
+                this.onRobotsChange();
+            }
+
+            return robot;
         } catch (error) {
             console.error('Connection failed:', error);
             throw error;
         }
     }
 
-    disconnect() {
-        if (this.isConnected && this.device) {
-            console.log('Manually disconnecting...');
-            this.device.gatt.disconnect();
+    disconnect(robotId) {
+        const robot = this.robots.get(robotId);
+        if (robot && robot.device) {
+            console.log('Manually disconnecting robot:', robot.name);
+            robot.device.gatt.disconnect();
         }
     }
 
-    handleDisconnection() {
-        console.log('Device disconnected');
-        this.isConnected = false;
-        this.stopUpdates();
-        if (this.onDisconnect) {
-            this.onDisconnect();
+    disconnectAll() {
+        console.log('Disconnecting all robots...');
+        for (const [robotId, robot] of this.robots.entries()) {
+            if (robot.device) {
+                robot.device.gatt.disconnect();
+            }
+        }
+    }
+
+    handleDisconnection(robotId) {
+        const robot = this.robots.get(robotId);
+        if (robot) {
+            console.log('Robot disconnected:', robot.name);
+            this.robots.delete(robotId);
+
+            // Stop updates if no robots left
+            if (this.robots.size === 0) {
+                this.stopUpdates();
+            }
+
+            // Notify listeners
+            if (this.onRobotsChange) {
+                this.onRobotsChange();
+            }
         }
     }
 
     startUpdates(callback) {
         // Send state updates at 20Hz (50ms interval)
-        this.updateInterval = setInterval(() => {
-            if (callback) {
-                const state = callback();
-                this.sendState(state);
-            }
-        }, 50);
+        this.updateCallback = callback;
+        if (!this.updateInterval) {
+            this.updateInterval = setInterval(() => {
+                if (this.updateCallback) {
+                    const state = this.updateCallback();
+                    this.sendStateToAll(state);
+                }
+            }, 50);
+        }
     }
 
     stopUpdates() {
@@ -89,22 +142,25 @@ class BluetoothService {
         }
     }
 
-    async sendState(state) {
-        if (!this.isConnected || !this.characteristic) return;
+    async sendStateToAll(state) {
+        const message = {
+            type: 'joystick',
+            data: state
+        };
 
-        try {
-            const message = {
-                type: 'joystick',
-                data: state
-            };
+        const json = JSON.stringify(message);
+        const encoder = new TextEncoder();
+        const data = encoder.encode(json);
 
-            const json = JSON.stringify(message);
-            const encoder = new TextEncoder();
-            const data = encoder.encode(json);
-
-            await this.characteristic.writeValue(data);
-        } catch (error) {
-            console.error('Failed to send state:', error);
+        // Send to all connected robots
+        for (const [robotId, robot] of this.robots.entries()) {
+            try {
+                if (robot.characteristic) {
+                    await robot.characteristic.writeValue(data);
+                }
+            } catch (error) {
+                console.error(`Failed to send state to ${robot.name}:`, error);
+            }
         }
     }
 
