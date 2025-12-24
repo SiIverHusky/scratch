@@ -1,0 +1,91 @@
+/* Robot management styles for Presenter */
+
+.robots-section .section-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+}
+
+.robot-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.robots-list {
+    min-height: 80px;
+}
+
+.robot-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.robot-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.robot-icon {
+    font-size: 32px;
+}
+
+.robot-info {
+    flex: 1;
+}
+
+.robot-name {
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.robot-time {
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.robot-manage-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.robot-manage-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+/* Robot details in modal */
+.robot-details {
+    text-align: center;
+    padding: 20px;
+}
+
+.robot-icon-large {
+    font-size: 64px;
+    margin-bottom: 15px;
+}
+
+.robot-name-large {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.robot-info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,339 @@
+/* Action buttons styles for Presenter */
+
+.actions-section .section-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+}
+
+.action-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+    min-height: 100px;
+}
+
+.action-button {
+    position: relative;
+    padding: 20px 15px;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.action-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.action-button:active {
+    transform: translateY(-1px);
+}
+
+.action-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.action-name {
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.action-count {
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.action-edit-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-button:hover .action-edit-btn {
+    opacity: 1;
+}
+
+.action-edit-btn:hover {
+    background: rgba(0, 0, 0, 0.5);
+    transform: scale(1.1);
+}
+
+/* Instructions list in edit modal */
+.instructions-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+
+.empty-instructions {
+    text-align: center;
+    padding: 30px;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.instruction-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.instruction-number {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.instruction-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.instruction-tool {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.instruction-params {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Consolas', 'Monaco', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.instruction-delay {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 3px;
+}
+
+.instruction-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.inst-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.inst-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.inst-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.inst-delete:hover {
+    background: rgba(255, 107, 107, 0.3);
+}
+
+/* Execution status section */
+.status-section {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid #667eea;
+}
+
+.execution-status {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: rgba(102, 126, 234, 0.2);
+    border-radius: 30px;
+}
+
+.status-indicator.status-running {
+    background: rgba(102, 126, 234, 0.2);
+    animation: pulse 1.5s infinite;
+}
+
+.status-indicator.status-stopping {
+    background: rgba(255, 152, 0, 0.2);
+}
+
+.status-indicator.status-completed {
+    background: rgba(76, 175, 80, 0.2);
+}
+
+.status-indicator.status-error {
+    background: rgba(255, 107, 107, 0.2);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.status-icon {
+    font-size: 20px;
+}
+
+.status-text {
+    font-weight: 600;
+}
+
+.progress-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+}
+
+#loopCount {
+    color: #667eea;
+    font-weight: 600;
+}
+
+/* Run mode modal */
+.run-action-name {
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.run-mode-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.run-mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 25px 20px;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+}
+
+.run-mode-btn:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+}
+
+.run-mode-icon {
+    font-size: 36px;
+}
+
+.run-mode-label {
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.run-mode-desc {
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+/* Import/Export tabs */
+.import-export-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.tab-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.tab-content p {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.tab-content textarea {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+}

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MiniPupper Presenter - Trade Show Controller</title>
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/header.css">
+    <link rel="stylesheet" href="styles/robots.css">
+    <link rel="stylesheet" href="styles/actions.css">
+    <link rel="stylesheet" href="styles/modal.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1976d2">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎪 MiniPupper Presenter</h1>
+            <p class="subtitle">Trade Show Multi-Robot Controller</p>
+        </header>
+
+        <!-- Robot Management Section -->
+        <section class="robots-section">
+            <div class="section-header">
+                <h2>🐕 Connected Robots (<span id="robotCount">0</span>)</h2>
+                <div class="robot-controls">
+                    <button class="btn btn-primary" id="connectBtn">+ Add Robot</button>
+                    <button class="btn btn-danger" id="disconnectAllBtn" disabled>Disconnect All</button>
+                </div>
+            </div>
+            <div class="robots-list" id="robotsList">
+                <div class="empty-state">
+                    <div class="empty-icon">🐕</div>
+                    <p>No robots connected</p>
+                    <p class="hint">Click "Add Robot" to connect a MiniPupper</p>
+                </div>
+            </div>
+            <!-- MCP Tools Status -->
+            <div class="tools-status-bar" id="toolsStatus">
+                <div class="tools-status-empty">
+                    <span class="tools-icon">🔧</span>
+                    <span>No MCP tools loaded - connect a robot to load tools</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Action Buttons Section -->
+        <section class="actions-section">
+            <div class="section-header">
+                <h2>⚡ Action Buttons</h2>
+                <div class="action-controls">
+                    <button class="btn btn-secondary" id="addActionBtn">+ New Action</button>
+                    <button class="btn btn-secondary" id="importExportBtn">📁 Import/Export</button>
+                </div>
+            </div>
+            <div class="actions-grid" id="actionsGrid">
+                <!-- Action buttons will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Execution Status -->
+        <section class="status-section" id="statusSection" style="display: none;">
+            <div class="execution-status">
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-icon">▶️</span>
+                    <span class="status-text" id="statusText">Running...</span>
+                </div>
+                <div class="progress-info">
+                    <span id="currentAction">-</span>
+                    <span id="loopCount"></span>
+                </div>
+                <button class="btn btn-stop" id="stopExecutionBtn">⏹ Stop</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Edit Action Modal -->
+    <div class="modal" id="editActionModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="modalTitle">New Action</h2>
+                <button class="modal-close" id="editModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="actionName">Action Name</label>
+                    <input type="text" id="actionName" placeholder="e.g., Wave Hello" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label for="actionIcon">Icon (emoji)</label>
+                    <input type="text" id="actionIcon" placeholder="e.g., 👋" maxlength="2" value="🎬">
+                </div>
+                <div class="form-group">
+                    <label for="actionColor">Button Color</label>
+                    <div class="color-picker">
+                        <input type="color" id="actionColor" value="#667eea">
+                        <div class="color-presets">
+                            <button class="color-preset" data-color="#667eea" style="background:#667eea"></button>
+                            <button class="color-preset" data-color="#4CAF50" style="background:#4CAF50"></button>
+                            <button class="color-preset" data-color="#FF9800" style="background:#FF9800"></button>
+                            <button class="color-preset" data-color="#E91E63" style="background:#E91E63"></button>
+                            <button class="color-preset" data-color="#00BCD4" style="background:#00BCD4"></button>
+                            <button class="color-preset" data-color="#9C27B0" style="background:#9C27B0"></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>MCP Instructions</label>
+                    <p class="form-hint">Add MCP tool calls to execute. Each instruction runs in sequence.</p>
+                    <div class="instructions-list" id="instructionsList">
+                        <!-- Instructions will be rendered here -->
+                    </div>
+                    <button class="btn btn-secondary btn-small" id="addInstructionBtn">+ Add Instruction</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelActionBtn">Cancel</button>
+                <button class="btn btn-danger" id="deleteActionBtn" style="display:none">Delete</button>
+                <button class="btn btn-primary" id="saveActionBtn">Save Action</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instruction Editor Modal -->
+    <div class="modal" id="instructionModal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2>Edit Instruction</h2>
+                <button class="modal-close" id="instructionModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="instructionTool">MCP Tool</label>
+                    <select id="instructionTool" class="tool-select">
+                        <option value="">-- Select a tool --</option>
+                        <!-- Tools will be populated dynamically -->
+                    </select>
+                    <p class="form-hint" id="toolDescription">Select a tool to see its description and parameters</p>
+                </div>
+                <div class="form-group" id="toolParamsContainer">
+                    <!-- Dynamic parameter form will be rendered here -->
+                    <div class="params-placeholder">
+                        <span class="params-icon">⚙️</span>
+                        <span>Select a tool above to configure its parameters</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="instructionDelay">Delay After (ms)</label>
+                    <input type="number" id="instructionDelay" placeholder="0" min="0" value="500">
+                    <p class="form-hint">Time to wait after this instruction before the next one</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelInstructionBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveInstructionBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Run Mode Modal -->
+    <div class="modal" id="runModeModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Run Action</h2>
+                <button class="modal-close" id="runModeModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="run-action-name" id="runActionName">Action Name</p>
+                <div class="run-mode-buttons">
+                    <button class="run-mode-btn" id="runOnceBtn">
+                        <span class="run-mode-icon">▶️</span>
+                        <span class="run-mode-label">Run Once</span>
+                        <span class="run-mode-desc">Execute instructions one time</span>
+                    </button>
+                    <button class="run-mode-btn" id="runLoopBtn">
+                        <span class="run-mode-icon">🔄</span>
+                        <span class="run-mode-label">Continuous Loop</span>
+                        <span class="run-mode-desc">Repeat until stopped</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import/Export Modal -->
+    <div class="modal" id="importExportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Import / Export Actions</h2>
+                <button class="modal-close" id="importExportModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="import-export-tabs">
+                    <button class="tab-btn active" data-tab="export">Export</button>
+                    <button class="tab-btn" data-tab="import">Import</button>
+                </div>
+                <div class="tab-content" id="exportTab">
+                    <p>Copy the JSON below to save your actions:</p>
+                    <textarea id="exportData" rows="8" readonly></textarea>
+                    <button class="btn btn-primary" id="copyExportBtn">📋 Copy to Clipboard</button>
+                </div>
+                <div class="tab-content" id="importTab" style="display:none">
+                    <p>Paste your saved actions JSON:</p>
+                    <textarea id="importData" rows="8" placeholder='Paste JSON here...'></textarea>
+                    <button class="btn btn-primary" id="doImportBtn">📥 Import Actions</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disconnect Robot Modal -->
+    <div class="modal" id="manageRobotModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Manage Robot</h2>
+                <button class="modal-close" id="manageRobotModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="robot-details" id="robotDetails">
+                    <div class="robot-icon-large">🐕</div>
+                    <div class="robot-name-large" id="robotNameLarge">Robot Name</div>
+                    <div class="robot-info-item">
+                        <span>Connected:</span>
+                        <span id="robotConnectedTime">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeManageRobotBtn">Close</button>
+                <button class="btn btn-danger" id="disconnectRobotBtn">Disconnect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MCP Tools List Modal -->
+    <div class="modal" id="toolsListModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>🔧 Available MCP Tools</h2>
+                <button class="modal-close" id="toolsListModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tools-modal-header">
+                    <p class="tools-count" id="toolsCount">0 tools available</p>
+                    <button class="btn btn-secondary btn-small" id="refreshToolsBtn">🔄 Refresh</button>
+                </div>
+                <div class="tools-grid" id="toolsGrid">
+                    <!-- Tool cards will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="scripts/bluetoothService.js"></script>
+    <script src="scripts/actionManager.js"></script>
+    <script src="scripts/executionController.js"></script>
+    <script src="scripts/uiController.js"></script>
+    <script src="scripts/main.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js').catch(function(err){
+                    console.warn('Service Worker registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
