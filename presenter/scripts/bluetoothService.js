@@ -86,7 +86,11 @@ class BluetoothService {
         try {
             // Request Bluetooth device
             const device = await navigator.bluetooth.requestDevice({
-                filters: [{ name: 'Minipupper-v2' }],
+                filters: [
+                    { name: 'Minipupper-v2' },
+                    { namePrefix: 'Micropupper' },
+                    { namePrefix: 'Santa' }
+                ],
                 optionalServices: [SERVICE_UUID]
             });
 
